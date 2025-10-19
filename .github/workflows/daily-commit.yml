@@ -1,0 +1,63 @@
+name: Daily Automated Commit
+
+on:
+  # 1. Use schedule with cron syntax to run once per day (02:30 UTC = 8:00 AM IST)
+  schedule:
+    - cron: '30 02 * * *'
+
+jobs:
+  daily_commit_job:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          # Required for creating a commit in a subsequent step
+          fetch-depth: 0 
+          
+      # Step 2: Set Git user information
+      - name: Configure Git User
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Step 3: Create a dynamic file to commit
+      - name: Create New Content for Commit
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          FILE_PATH="daily_update/commit_log.md"
+          
+          # Create the directory if it doesn't exist
+          mkdir -p daily_update
+          
+          # Append a new log entry to the file
+          echo "- **Commit:** $TIMESTAMP" >> $FILE_PATH
+          echo "  - **Workflow Run ID:** ${{ github.run_id }}" >> $FILE_PATH
+          echo "  - **Triggered By:** ${{ github.event_name }}" >> $FILE_PATH
+          
+          # Add the file to Git staging
+          git add $FILE_PATH
+
+      # 4. Include a step with your email in its name
+      - name: 🔒 Creating Commit for 23f2004618@ds.study.iitm.ac.in
+        id: create_commit
+        # Check if there are any changes to commit before proceeding
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            # 5. Create a commit in each run
+            git commit -m "🤖 Daily Automated Commit: $TIMESTAMP"
+            echo "::set-output name=commit_status::committed"
+          else
+            echo "No changes detected, skipping commit."
+            echo "::set-output name=commit_status::skipped"
+          fi
+
+      # Step 5: Push the new commit to the repository
+      - name: Push Changes
+        if: steps.create_commit.outputs.commit_status == 'committed'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }} # Push to the current branch
