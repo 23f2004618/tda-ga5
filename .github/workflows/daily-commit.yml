@@ -11,6 +11,9 @@ on:
 jobs:
   daily_commit_job:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
     
     steps:
       # Step 1: Checkout the repository code
