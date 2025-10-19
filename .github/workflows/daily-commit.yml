@@ -1,9 +1,12 @@
 name: Daily Automated Commit
 
 on:
-  # 1. Use schedule with cron syntax to run once per day (02:30 UTC = 8:00 AM IST)
+  # 1. SCHEDULE TRIGGER (Runs daily at 02:30 UTC / 8:00 AM IST)
   schedule:
     - cron: '30 02 * * *'
+    
+  # 2. MANUAL TRIGGER (Adds the "Run workflow" button)
+  workflow_dispatch: 
 
 jobs:
   daily_commit_job:
@@ -60,4 +63,4 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref_name }} # Push to the current branch
+          branch: ${{ github.ref_name }}
